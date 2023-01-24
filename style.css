@@ -1,0 +1,9 @@
+* {
+    margin: 0;
+}
+
+#search-container{
+    z-index: -300;
+    display: flex;
+    color: gray;
+}

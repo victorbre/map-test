@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>My Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+    
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
+</head>
+
+<body>
+    <div id="search-container">
+        <input type="text" id="search-field">
+        <button id="search-button">Search</button>
+    </div>
+    <div id="map" style="height: 800px; width: 100%;"></div>
+    <script>
+        var map = L.map('map').setView([62.0, 15.0], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+            maxZoom: 18,
+        }).addTo(map);
+
+        var markerClusterGroup = L.markerClusterGroup().addTo(map);
+        var allMarkers = [];
+        var regions = [];
+        fetch('https://www.svt.se/special/articledata/4100/svt_skjutning.json')
+            .then(response => response.json())
+            .then(data => {
+                data.features.forEach(function (feature) {
+                    var marker = L.marker(feature.geometry.coordinates.reverse());
+                    var properties = feature.properties;
+                    var popupContent =
+                        '<b>Crime Date:</b>' + properties.brottsdatum + '<br>'
+                        + '<b>Region:</b>' + properties.region + '<br>'
+                        + '<b>Police Area:</b>' + properties.polisomrade + '<br>'
+                        + '<b>Source:</b>' + properties.source;
+                    marker.bindPopup(popupContent);
+                    allMarkers.push(marker);
+                    if (!regions.includes(properties.region)) {
+                        regions.push(properties.region);
+                    }
+                });
+
+
+                document.getElementById("search-field").addEventListener("input", function () {
+                    var input = document.getElementById("search-field").value;
+                    var suggestions = regions.filter(function (region) {
+                        return region.toLowerCase().includes(input.toLowerCase());
+                    });
+                    $("#search-field").autocomplete({
+                        source: suggestions
+                    });
+                    markerClusterGroup.addLayers(allMarkers);
+                });
+            });
+    </script>
+
+</body>
+
+</html>
